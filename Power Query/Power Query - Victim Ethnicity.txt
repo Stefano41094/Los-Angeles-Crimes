@@ -1,0 +1,7 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Victim_Ethnicity = Source{[Schema="Victim",Item="Ethnicity"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(Victim_Ethnicity,{"Timestamp"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"VictimEthnicity", "Victim Ethnicity"}, {"EthnicityDescription", "Ethnicity Description"}})
+in
+    #"Renamed Columns"

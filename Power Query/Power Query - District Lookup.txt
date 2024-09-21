@@ -1,0 +1,12 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Location_District = Source{[Schema="Location",Item="District"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(Location_District,{"District", "Area", "Bureau"}),
+    #"Extracted Text Before Delimiter" = Table.TransformColumns(#"Removed Other Columns", {{"Bureau", each Text.BeforeDelimiter(_, " "), type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Extracted Text Before Delimiter",{{"Bureau", "BureauLowercase"}}),
+    #"Duplicated Column" = Table.DuplicateColumn(#"Renamed Columns", "BureauLowercase", "BureauLowercase - Copy"),
+    #"Reordered Columns" = Table.ReorderColumns(#"Duplicated Column",{"District", "Area", "BureauLowercase", "BureauLowercase - Copy"}),
+    #"Uppercased Text" = Table.TransformColumns(#"Reordered Columns",{{"BureauLowercase - Copy", Text.Upper, type text}}),
+    #"Renamed Columns1" = Table.RenameColumns(#"Uppercased Text",{{"BureauLowercase - Copy", "Bureau (Uppercase)"}, {"BureauLowercase", "Bureau (Lowercase)"}})
+in
+    #"Renamed Columns1"

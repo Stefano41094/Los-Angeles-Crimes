@@ -1,0 +1,9 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Weapon_Weapon = Source{[Schema="Weapon",Item="Weapon"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(Weapon_Weapon,{"Timestamp"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"WeaponDescription", "Weapon Description"}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Weapon", Int64.Type}}),
+    #"Added Custom" = Table.AddColumn(#"Changed Type", "Weapon Type", each if [Weapon] >= 101 and [Weapon] <= 125 then "Firearm" else if [Weapon] = 500 or [Weapon] = 505 then "Firearm" else "No Firearm")
+in
+    #"Added Custom"

@@ -1,0 +1,8 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Crime_InvestigationStatus = Source{[Schema="Crime",Item="InvestigationStatus"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(Crime_InvestigationStatus,{"Timestamp"}),
+    #"Uppercased Text" = Table.TransformColumns(#"Removed Columns",{{"PersonType", Text.Upper, type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Uppercased Text",{{"StatusName", "Status Name"}, {"PersonType", "Person Type"}})
+in
+    #"Renamed Columns"

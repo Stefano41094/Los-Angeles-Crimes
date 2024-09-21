@@ -1,0 +1,8 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Crime_CrimesFact = Source{[Schema="Crime",Item="CrimesFact"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(Crime_CrimesFact,{"CrimeKey", "ReportDate", "District", "MainCrime", "VictimAge", "VictimSex", "VictimEthnicity", "LocationType", "Weapon", "Status", "RoundedStreet", "CrossStreet"}),
+    #"Filtered Rows" = Table.SelectRows(#"Removed Other Columns", each [ReportDate] >= #date(2016, 1, 1)),
+    #"Renamed Columns" = Table.RenameColumns(#"Filtered Rows",{{"CrimeKey", "Crime Key"}, {"ReportDate", "Report Date"}, {"MainCrime", "Main Crime"}, {"VictimAge", "Victim Age"}, {"VictimSex", "Victim Sex"}, {"VictimEthnicity", "Victim Ethnicity"}, {"LocationType", "Location Type"}, {"RoundedStreet", "Rounded Street"}, {"CrossStreet", "Cross Street"}})
+in
+    #"Renamed Columns"

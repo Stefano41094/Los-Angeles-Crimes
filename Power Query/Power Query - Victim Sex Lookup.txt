@@ -1,0 +1,8 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Victim_Sex = Source{[Schema="Victim",Item="Sex"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(Victim_Sex,{"Timestamp"}),
+    #"Inserted Uppercased Text" = Table.AddColumn(#"Removed Columns", "UPPERCASE", each Text.Upper([SexDescription]), type text),
+    #"Renamed Columns" = Table.RenameColumns(#"Inserted Uppercased Text",{{"UPPERCASE", "Sex Description (Uppercase)"}, {"SexDescription", "Sex Description (Proper)"}, {"VictimSex", "Victim Sex"}})
+in
+    #"Renamed Columns"

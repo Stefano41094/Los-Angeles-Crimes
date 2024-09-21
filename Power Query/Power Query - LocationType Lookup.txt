@@ -1,0 +1,7 @@
+let
+    Source = Sql.Database("LAPTOP-ESN8E7MT", "LosAngeles_Crimes", [CreateNavigationProperties=false]),
+    Location_LocationType = Source{[Schema="Location",Item="LocationType"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(Location_LocationType,{"Timestamp"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"LocationType", "Location Type"}, {"LocTypeDescription", "Loc. Type Description"}})
+in
+    #"Renamed Columns"

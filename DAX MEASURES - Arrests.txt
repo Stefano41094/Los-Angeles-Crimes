@@ -1,0 +1,149 @@
+																				MEASURES
+ 
+ ARREST FOLDER
+ 
+	Juvenile Arrest % Change = 
+		VAR JuvenileArrestPctChange = 
+			DIVIDE([Juvenile Arrests], [Juvenile Arrests Prev. Year]) - 1
+		VAR Result =
+			IF(
+				ISBLANK([Juvenile Arrests Prev. Year]),
+				BLANK(),
+				JuvenileArrestPctChange
+			)
+		RETURN Result
+	Juvenile Arrests = 
+		CALCULATE(
+			[Total Arrests],
+			'Status Lookup'[Person Type] = "Juvenile"
+		)
+	Juvenile Arrests % = 
+		VAR AllSelectedJuvenileArrests =
+			CALCULATE(
+				[Juvenile Arrests],
+				ALLSELECTED()
+			)
+		VAR JuvenileArrestsPct =
+			DIVIDE(
+				[Juvenile Arrests],
+				AllSelectedJuvenileArrests
+			)
+		RETURN JuvenileArrestsPct
+	Juvenile Arrests Prev. Year = 
+		CALCULATE(
+			[Juvenile Arrests],
+			DATEADD('Calendar Table'[Date],-1,YEAR)
+		)
+
+	Top Clusters Arrests % = 
+		VAR AllArrestsClusters = -- Total Arrests regardless of the cluster and the slicer (to be used as denominator for both returned measures)
+			CALCULATE(
+				[Total Arrests],
+				REMOVEFILTERS('Crime Lookup'[Crime Cluster]),
+				REMOVEFILTERS('pTopNCrimes'[pTopNCrimes_Series])
+			)
+			
+		-- Create the measure to be returned when the filter context for Crime Cluster is unique
+		VAR ClusterRank = -- Crime clusters ranked by total crimes
+			RANKX(
+				ALLSELECTED('Crime Lookup'[Crime Cluster]),
+				[Total Crimes],
+				,
+				DESC
+			)
+		VAR ClusterArrestRatio = -- Total Arrest ratio for each cluster
+			DIVIDE(
+				[Total Arrests],
+				AllArrestsClusters
+			)
+		VAR TopClusterArrestRatio = -- Dynamic selection of the top clusters based on the slicer
+			IF(
+				ClusterRank <= SELECTEDVALUE('pTopNCrimes'[pTopNCrimes_Series]),
+				ClusterArrestRatio,
+				BLANK()
+			)
+			
+		-- Create the measure to be returned when the filter context for Crime Cluster holds multiple values
+		VAR TopNTotalArrest = -- Total Arrests for all crimes in the top selected clusters  
+			CALCULATE(
+				[Total Arrests],
+				TOPN(
+					SELECTEDVALUE('pTopNCrimes'[pTopNCrimes_Series]),
+					VALUES('Crime Lookup'[Crime Cluster]),
+					[Total Crimes],
+					DESC
+				)
+			)
+		VAR TopClustersOverallArrestRatio = -- Overall Arrests ratio
+			DIVIDE(
+				TopNTotalArrest,
+				AllArrestsClusters
+			)
+			
+		-- When the Crime Clusters in the filter context is unique TopClusterArrestRatio is returned, TopClustersOverallArrestRatio otherwise
+		VAR Result = 
+			IF(
+				HASONEVALUE('Crime Lookup'[Crime Cluster]),
+				TopClusterArrestRatio,
+				TopClustersOverallArrestRatio
+			)
+		RETURN Result
+		
+	Total Arrests = 
+		CALCULATE(
+			[Total Crimes],
+			'Status Lookup'[Status] <= 2
+		)
+		
+	Total Arrests % = 
+		VAR AllSelectedArrests =
+			CALCULATE(
+				[Total Arrests], --SUM(Crimes[Flag Arrest]),
+				ALLSELECTED()
+			)
+		VAR TotalArrestPct =
+			DIVIDE(
+				[Total Arrests], --SUM(Crimes[Flag Arrest]),
+				AllSelectedArrests
+			)
+		RETURN TotalArrestPct
+		
+	Total Arrests % Change = 
+		VAR TotalArrestsPrevYear =
+			CALCULATE(
+				[Total Arrests],
+				DATEADD(
+					'Calendar Table'[Date],
+					-1,
+					YEAR
+				)
+			)
+		VAR TotalArrestsPctChange = 
+			IF(
+				ISBLANK(TotalArrestsPrevYear),
+				BLANK(),
+				DIVIDE([Total Arrests],TotalArrestsPrevYear) - 1
+			)
+		RETURN TotalArrestsPctChange
+		
+	Total Arrests Card = 
+		VAR TotalArrests = [Total Arrests] --SUM(Crimes[Flag Arrest])
+
+		VAR OneThousand = 1000
+		VAR TenThousand = 10000
+		VAR HundredThousand = 100000
+		VAR ArrestLabels =
+			SWITCH(
+				TRUE(),
+				TotalArrests >= HundredThousand, FORMAT(DIVIDE(TotalArrests, OneThousand),"#\K"),
+				TotalArrests >= TenThousand && TotalArrests < HundredThousand, FORMAT(ROUND(DIVIDE(TotalArrests,OneThousand),1),"#.0\K"),
+				TotalArrests >= OneThousand && TotalArrests < TenThousand, FORMAT(ROUND(DIVIDE(TotalArrests,OneThousand),2),"#.00\K"),
+				FORMAT(TotalArrests, "General Number")
+			)
+		RETURN ArrestLabels
+		
+	Total Crimes No Arrests = 
+		CALCULATE(
+			[Total Crimes],
+			'Status Lookup'[Status] > 2
+		)

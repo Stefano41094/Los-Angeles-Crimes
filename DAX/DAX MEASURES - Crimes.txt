@@ -78,16 +78,22 @@ Total Crimes % Change =
 	RETURN TotalCrimesPctChange
 	
 Most Common Crime = 
-	VAR TopCrime = 
-		UPPER(
-			TOPN(
-				1,
-				VALUES('Crime Lookup'[Crime Description]),
-				[Total Crimes],
-				DESC
-			)
-		)
-	RETURN TopCrime
+VAR TopCrime = 
+    UPPER(
+        TOPN(
+            1,
+            VALUES('Crime Lookup'[Crime Description]),
+            [Total Crimes],
+            DESC
+        )
+    )
+VAR TopCrimeFix =
+    IF(
+        TopCrime IN {"Intimate Partner - Simple Assault","Intimate Partner - Aggravated Assault"},
+        "Intimate Partner - Assault",
+        TopCrime
+    )
+RETURN TopCrimeFix
 	
 Top Clusters Frequency = 
 	VAR AllCrimeClusters = -- Total Crimes regardless of the cluster and the slicer (to be used as denominator for both returned measures
